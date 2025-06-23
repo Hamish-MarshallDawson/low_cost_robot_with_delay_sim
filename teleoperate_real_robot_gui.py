@@ -34,6 +34,13 @@ DELAY_STEP = 0.1
 DELAY_ANCHOR_TIME = time.time()  # Time when delay was last changed
 DELAY_ANCHOR_VALUE = 0.0         # Value of delay at anchor time
 
+#To enable jitter delay
+JITTER_ENABLED = False
+JITTER_RANGE = 0.50
+Jitter_MIN = 0.0
+JITTER_MAX = 0.0
+LAST_JITTER_TIME = 0 #control how often jitter changes
+
 #makes the main window for the gui
 root = tk.Tk()
 root.title("Robot Delay Control")
@@ -103,6 +110,32 @@ def randomize_delay():
     randomize_btn.state(['pressed'])
     root.after(100, lambda: randomize_btn.state(['!pressed']))
     
+    
+def toggle_jitter():
+     global JITTER_ENABLED, JITTER_MIN, JITTER_MAX, NETWORK_DELAY, DELAY_ANCHOR_TIME, DELAY_ANCHOR_VALUE
+     
+     if JITTER_ENABLED:
+            JITTER_ENABLED = False
+            jitter_btn.config(text="Enable Jitter")
+            status_var.set("Jitter Disabled")
+     else:
+         #enables jitter
+        JITTER_ENABLED = True
+         
+        JITTER_MIN = max(MIN_DELAY, NETWORK_DELAY - JITTER_RANGE/2)
+        JITTER_MAX = min(MAX_DELAY, NETWORK_DELAY + JITTER_RANGE/2)
+        DELAY_ANCHOR_TIME = time.time()
+        DELAY_ANCHOR_VALUE = NETWORK_DELAY
+        jitter_btn.config(text="Disable Jitter")
+        status_var.set(f"Jitter Enabled: {JITTER_MIN:.2f} - {JITTER_MAX:.2f} seconds")
+    
+     jitter_btn.state(['pressed'])
+     root.after(100, lambda: jitter_btn.state(['!pressed']))
+        
+jitter_btn = ttk.Button(button_frame, text="Enable Jitter", command=toggle_jitter)
+jitter_btn.pack(side="left", padx=5, expand=True, fill="x")
+
+
 # #adds buttons to the gui
 # increase_btn = ttk.Button(button_frame, text="Increase (+0.1s)", command=increase_delay)
 # increase_btn.pack(side="left", padx=5, expand=True, fill="x")
@@ -138,14 +171,22 @@ delay_progress.pack(pady=10, padx=10, fill="x")
 #func to run to control robot in separate thread
 
 def robot_control_thread():
-    # Add DELAY_ANCHOR_TIME and DELAY_ANCHOR_VALUE to the global declaration:
-    global NETWORK_DELAY, TRANSITION_ACTIVE, DELAY_ANCHOR_TIME, DELAY_ANCHOR_VALUE, TARGET_DELAY  
+    global NETWORK_DELAY, TRANSITION_ACTIVE, DELAY_ANCHOR_TIME, DELAY_ANCHOR_VALUE, TARGET_DELAY, LAST_JITTER_TIME, JITTER_MIN, JITTER_MAX
     
     while running:
         try:
             # Read leader position and store in buffer
             leader_pos = leader.read_position()
             position_buffer.append((time.time(), leader_pos))
+            
+            # Handle jitter when enabled
+            current_time = time.time()
+            if JITTER_ENABLED and current_time - LAST_JITTER_TIME > 0.1:  # Update jitter every 100ms
+                # Only apply jitter when not in middle of another transition
+                if not TRANSITION_ACTIVE:
+                    TARGET_DELAY = random.uniform(JITTER_MIN, JITTER_MAX)
+                    TRANSITION_ACTIVE = True
+                LAST_JITTER_TIME = current_time
             
             # Handle the delay transition
             if TRANSITION_ACTIVE:
@@ -200,8 +241,11 @@ def robot_control_thread():
 # Modify update_gui to ensure correct values:
 def update_gui():
     if running:
-        # Update with correct current values
-        current_delay_var.set(f"Current Delay: {NETWORK_DELAY:.2f} seconds")
+        # Update delay display with jitter info if enabled
+        if JITTER_ENABLED:
+            current_delay_var.set(f"Current Delay: {NETWORK_DELAY:.2f}s (Jitter: {JITTER_MIN:.2f}-{JITTER_MAX:.2f}s)")
+        else:
+            current_delay_var.set(f"Current Delay: {NETWORK_DELAY:.2f} seconds")
         
         # Update progress bar - ensure it shows current value
         delay_progress["value"] = NETWORK_DELAY
@@ -260,3 +304,4 @@ root.protocol("WM_DELETE_WINDOW", on_closing)
 
 # Start the GUI main loop
 root.mainloop()
+
