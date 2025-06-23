@@ -3,7 +3,7 @@ from dynamixel import Dynamixel
 
 import collections 
 import time
-
+import random
 
 #decided to try add keyboard controls for variable delay
 import keyboard  
@@ -20,29 +20,58 @@ position_buffer = collections.deque(maxlen=1000) # buffer that creates a queue o
 last_info_time = 0  # Variable to track the last time we printed info
 
 # Configurable delay (in seconds)
-NETWORK_DELAY = 0.0  # Start with 500ms delay
-MIN_DELAY = 0.0
-MAX_DELAY = 2.0
-DELAY_STEP = 0.1
+NETWORK_DELAY = 0.0  # Start with no delay
+MIN_DELAY = 0.0 # what is the least amount of delay that can be set
+MAX_DELAY = 2.0 #maximum amount of delay that can be set
+TARGET_DELAY =0.0 #target delay for smooth transtion
+TRANSITION_SPEED = 0.1 #how quickly the delay should transtion to the target delay
+TRANSITION_ACTIVE = False
+DELAY_STEP = 0.1 
+
+#this is to stop multi key presses without causing jackiness in the arms
+LAST_KEY_TIME= 0
 
 
+#explains the controls to the user for delay simulation
 print("\nDelay Simulation Controls:")
 print("  UP ARROW: Increase delay")
+print(" r key: Randomize delay")
 print("  DOWN ARROW: Decrease delay")
 
 while True:
     
-    # function to add delay when users presses up arrow key 
-    if keyboard.is_pressed('up'):
-        NETWORK_DELAY = min(NETWORK_DELAY + DELAY_STEP, MAX_DELAY)
-        print(f"Increased delay to {NETWORK_DELAY:.2f} seconds")
-        time.sleep(0.5) # to prevent accidental multi press
+    current_time = time.time()
+    if current_time - LAST_KEY_TIME >0.3:
+        if keyboard.is_pressed('up'):
+            TARGET_DELAY = min(NETWORK_DELAY + DELAY_STEP, MAX_DELAY)
+            TRANSITION_ACTIVE = True
+            print(f"Increased delay to {NETWORK_DELAY:.2f} seconds")
+            LAST_KEY_TIME = current_time  # Update timestamp
+        
 
-    #if down arrow is pressed this function decreases the delay
-    elif keyboard.is_pressed('down'):
-        NETWORK_DELAY = max(MIN_DELAY, NETWORK_DELAY - DELAY_STEP)
-        print(f"Decreased delay to {NETWORK_DELAY:.2f} seconds")
-        time.sleep(0.5) # to prevent accidental multi press
+            #if down arrow is pressed this function decreases the delay
+        elif keyboard.is_pressed('down'):
+            TARGET_DELAY = max(MIN_DELAY, NETWORK_DELAY - DELAY_STEP)
+            TRANSITION_ACTIVE = True
+            print(f"Decreased delay to {NETWORK_DELAY:.2f} seconds")
+            LAST_KEY_TIME = current_time  # Update timestamp
+        
+            # allows random amount of delay to be set by pressing r
+        elif keyboard.is_pressed('r'):
+            TARGET_DELAY = random.uniform(MIN_DELAY, MAX_DELAY)
+            TRANSITION_ACTIVE = True
+            print(f"Randomized delay from {NETWORK_DELAY:.2f} to {TARGET_DELAY:.2f} seconds")
+            LAST_KEY_TIME = current_time  # Update timestamp
+    
+    if TRANSITION_ACTIVE:
+        # Smoothly transition to the target delay
+        if abs(NETWORK_DELAY - TARGET_DELAY) < TRANSITION_SPEED:
+            NETWORK_DELAY = TARGET_DELAY
+            TRANSITION_ACTIVE = False
+        elif NETWORK_DELAY < TARGET_DELAY:
+            NETWORK_DELAY += TRANSITION_SPEED
+        else:
+            NETWORK_DELAY -= TRANSITION_SPEED
     
     
     # Function to read leader position and store it in the buffer
@@ -56,9 +85,9 @@ while True:
     delayed_position = leader_pos
     
     if position_buffer:
-        closet_entry = min(position_buffer, 
+        closest_entry = min(position_buffer, 
                            key=lambda x: abs(x[0] - target_time))
-        delayed_position = closet_entry[1]
+        delayed_position = closest_entry[1]
         
     #Apply the delayed position to the follower robot
     
