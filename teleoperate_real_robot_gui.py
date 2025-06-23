@@ -64,29 +64,29 @@ button_frame = ttk.Frame(control_frame)
 button_frame.pack(pady=10, fill="x")
 
 # Modify button handler functions to allow interruption:
-def increase_delay():
-    global TARGET_DELAY, TRANSITION_ACTIVE, DELAY_ANCHOR_TIME, DELAY_ANCHOR_VALUE
-    DELAY_ANCHOR_TIME = time.time()
-    DELAY_ANCHOR_VALUE = NETWORK_DELAY
-    # Allow immediate response by updating TARGET_DELAY directly
-    TARGET_DELAY = min(TARGET_DELAY + DELAY_STEP, MAX_DELAY)
-    TRANSITION_ACTIVE = True
-    status_var.set(f"Increased delay to {TARGET_DELAY:.2f} seconds")
+# def increase_delay():
+#     global TARGET_DELAY, TRANSITION_ACTIVE, DELAY_ANCHOR_TIME, DELAY_ANCHOR_VALUE
+#     DELAY_ANCHOR_TIME = time.time()
+#     DELAY_ANCHOR_VALUE = NETWORK_DELAY
+#     # Allow immediate response by updating TARGET_DELAY directly
+#     TARGET_DELAY = min(TARGET_DELAY + DELAY_STEP, MAX_DELAY)
+#     TRANSITION_ACTIVE = True
+#     status_var.set(f"Increased delay to {TARGET_DELAY:.2f} seconds")
     
-    # Visual feedback
-    increase_btn.state(['pressed'])
-    root.after(100, lambda: increase_btn.state(['!pressed']))
+#     # Visual feedback
+#     increase_btn.state(['pressed'])
+#     root.after(100, lambda: increase_btn.state(['!pressed']))
 
-def decrease_delay():
-    global TARGET_DELAY, TRANSITION_ACTIVE
-    # Allow immediate response by updating TARGET_DELAY directly
-    TARGET_DELAY = max(MIN_DELAY, TARGET_DELAY - DELAY_STEP)
-    TRANSITION_ACTIVE = True
-    status_var.set(f"Decreased delay to {TARGET_DELAY:.2f} seconds")
+# def decrease_delay():
+#     global TARGET_DELAY, TRANSITION_ACTIVE
+#     # Allow immediate response by updating TARGET_DELAY directly
+#     TARGET_DELAY = max(MIN_DELAY, TARGET_DELAY - DELAY_STEP)
+#     TRANSITION_ACTIVE = True
+#     status_var.set(f"Decreased delay to {TARGET_DELAY:.2f} seconds")
     
-    # Visual feedback
-    decrase_btn.state(['pressed'])
-    root.after(100, lambda: decrase_btn.state(['!pressed']))
+#     # Visual feedback
+#     decrase_btn.state(['pressed'])
+#     root.after(100, lambda: decrase_btn.state(['!pressed']))
 
 def randomize_delay():
     global TARGET_DELAY, TRANSITION_ACTIVE, DELAY_ANCHOR_TIME, DELAY_ANCHOR_VALUE
@@ -103,12 +103,12 @@ def randomize_delay():
     randomize_btn.state(['pressed'])
     root.after(100, lambda: randomize_btn.state(['!pressed']))
     
-#adds buttons to the gui
-increase_btn = ttk.Button(button_frame, text="Increase (+0.1s)", command=increase_delay)
-increase_btn.pack(side="left", padx=5, expand=True, fill="x")
+# #adds buttons to the gui
+# increase_btn = ttk.Button(button_frame, text="Increase (+0.1s)", command=increase_delay)
+# increase_btn.pack(side="left", padx=5, expand=True, fill="x")
 
-decrase_btn = ttk.Button(button_frame, text="Decrease (-0.1s)", command=decrease_delay)
-decrase_btn.pack(side="left", padx=5, expand=True, fill="x")
+# decrase_btn = ttk.Button(button_frame, text="Decrease (-0.1s)", command=decrease_delay)
+# decrase_btn.pack(side="left", padx=5, expand=True, fill="x")
 
 randomize_btn = ttk.Button(button_frame, text="Randomize Delay", command=randomize_delay)
 randomize_btn.pack(side="left", padx=5, expand=True, fill="x")
