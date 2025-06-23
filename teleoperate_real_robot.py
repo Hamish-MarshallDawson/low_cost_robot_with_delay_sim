@@ -40,7 +40,7 @@ while True:
 
     #if down arrow is pressed this function decreases the delay
     elif keyboard.is_pressed('down'):
-        NETWORK_DELAY = min(NETWORK_DELAY - DELAY_STEP, MAX_DELAY)
+        NETWORK_DELAY = max(MIN_DELAY, NETWORK_DELAY - DELAY_STEP)
         print(f"Decreased delay to {NETWORK_DELAY:.2f} seconds")
         time.sleep(0.5) # to prevent accidental multi press
     
