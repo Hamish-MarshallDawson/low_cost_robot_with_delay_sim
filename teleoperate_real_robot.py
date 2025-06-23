@@ -1,12 +1,11 @@
 from robot import Robot
 from dynamixel import Dynamixel
-
 import collections 
 import time
 import random
-
 #decided to try add keyboard controls for variable delay
 import keyboard  
+
 
 #updated device name due to me using windows instead of linux lol
 leader_dynamixel = Dynamixel.Config(baudrate=1_000_000, device_name='COM4').instantiate()
