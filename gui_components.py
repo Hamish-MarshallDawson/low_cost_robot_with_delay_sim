@@ -1,4 +1,5 @@
-#This is the file that provides the visual aspect of the delay simulator, I don't really understand the gui aspect but learning
+#This is the file that provides the visual aspect of the delay simulator, 
+# #I don't really understand the gui aspect but learning
 import tkinter as tk
 from tkinter import ttk
 import time

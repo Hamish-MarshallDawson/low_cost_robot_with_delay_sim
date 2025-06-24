@@ -6,7 +6,8 @@ import time
 import shared_state as state
 
 
-# a lot of this code is copied from the original low_cost_robot repo as all I have added on top of it is the delay simulation and gui interface
+# a lot of this code is copied from the original low_cost_robot repo as all 
+# I have added on top of it is the delay simulation and gui interface
 
 def initialize_robots():
     """Initialize and configure the robots."""
