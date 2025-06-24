@@ -13,8 +13,15 @@ import gui_components as gc
 def robot_control_thread(leader, follower):
     while state.running:
         try:
+            
+            # Mark start time for system delay measurement
+            start_time = time.time()
+            
             # Read leader position and store in buffer
             leader_pos = rc.read_leader_position(leader)
+            
+            # Measure system delay
+            rc.measure_system_delay(start_time)
             
             current_time = time.time()
             
@@ -59,12 +66,15 @@ def update_gui():
     if state.running:
         # Update delay display
         if state.JITTER_ENABLED:
-            current_delay_var.set(f"Current Delay: {state.NETWORK_DELAY:.2f}s (Jitter: {state.JITTER_MIN:.2f}-{state.JITTER_MAX:.2f}s)")
+            current_delay_var.set(f"Current Virtual Delay: {state.NETWORK_DELAY:.2f}s (Jitter: {state.JITTER_MIN:.2f}-{state.JITTER_MAX:.2f}s)")
         else:
-            current_delay_var.set(f"Current Delay: {state.NETWORK_DELAY:.2f} seconds")
+            current_delay_var.set(f"Current Virtual Delay: {state.NETWORK_DELAY:.2f} seconds")
         
         # Update progress bar
         delay_progress["value"] = state.NETWORK_DELAY
+        
+        # Update system delay display
+        system_delay_var.set(f"Real System Delay: {state.SYSTEM_DELAY_MS:.1f} ms")
         
         # Update slider
         if not state.delay_slider_dragging:
@@ -97,6 +107,16 @@ if __name__ == "__main__":
     current_delay_var = tk.StringVar(value=f"Current Delay: {state.NETWORK_DELAY:.2f} seconds")
     current_delay_label = ttk.Label(control_frame, textvariable=current_delay_var, font=("Arial", 14))
     current_delay_label.pack(pady=10)
+    
+    # System delay display
+    system_delay_var = tk.StringVar(value="System Delay: 0.0 ms")
+    system_delay_label = ttk.Label(
+        control_frame, 
+        textvariable=system_delay_var,
+        font=("Arial", 10, "italic"),
+        foreground="#CC0000"  # Red color to distinguish from simulated delay
+    )
+    system_delay_label.pack(pady=5)
     
     delay_slider = ttk.Scale(
         control_frame,
@@ -184,6 +204,8 @@ if __name__ == "__main__":
     robot_thread = threading.Thread(target=robot_control_thread, args=(leader, follower))
     robot_thread.daemon = True
     robot_thread.start()
+    
+    
     
     # Start GUI updates
     update_gui()

@@ -5,7 +5,7 @@ import collections
 # Configuration constants
 MIN_DELAY = 0.0
 #adjust this to change the maximum delay amount
-MAX_DELAY = 10.0
+MAX_DELAY = 1.0
 DELAY_STEP = 0.1
 TRANSITION_SPEED = 0.2
 
@@ -37,3 +37,12 @@ delay_slider_dragging = False
 
 # Threading control
 running = True
+
+#new feature!!!
+
+# System delay tracking
+SYSTEM_DELAY_MS = 0.0  # Actual measured system delay in milliseconds
+LAST_COMMAND_TIME = 0.0  # When we last sent a command to the follower
+COMMAND_COUNT = 0  # Track number of commands for rolling average
+MAX_DELAY_SAMPLES = 10  # Number of samples for rolling average
+DELAY_SAMPLES = []  # Store recent delay measurements

@@ -10,7 +10,7 @@ import shared_state as state
 # I have added on top of it is the delay simulation and gui interface
 
 def initialize_robots():
-    """Initialize and configure the robots."""
+    #starts and configures the leader and follower robots
     leader_dynamixel = Dynamixel.Config(baudrate=1_000_000, device_name='COM4').instantiate()
     follower_dynamixel = Dynamixel.Config(baudrate=1_000_000, device_name='COM3').instantiate()
     
@@ -21,16 +21,31 @@ def initialize_robots():
     return leader, follower
 
 def read_leader_position(leader):
-    """Read leader position and store in buffer."""
+    #reads the leaders position and add it to the buffer
     leader_pos = leader.read_position()
     state.position_buffer.append((time.time(), leader_pos))
     return leader_pos
 
 def get_delayed_position(leader_pos, target_time):
-    """Get position from buffer based on target time."""
+    #get the position of the leader from the buffer at the target time
     if not state.position_buffer:
         return leader_pos
     
     closest_entry = min(state.position_buffer, 
                        key=lambda x: abs(x[0] - target_time))
     return closest_entry[1]
+
+
+##new feature!
+def measure_system_delay(start_time):
+    #measures actual system delay by calculating the time taken to excecute a command
+    elapsed_ms = (time.time() - start_time) * 1000
+    
+    # Add to rolling average
+    state.DELAY_SAMPLES.append(elapsed_ms)
+    if len(state.DELAY_SAMPLES) > state.MAX_DELAY_SAMPLES:
+        state.DELAY_SAMPLES.pop(0)
+    
+    # Calculate average
+    state.SYSTEM_DELAY_MS = sum(state.DELAY_SAMPLES) / len(state.DELAY_SAMPLES)
+    return elapsed_ms

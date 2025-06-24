@@ -64,3 +64,7 @@ def on_slider_release(slider, status_callback):
     state.TRANSITION_ACTIVE = True
     status_callback(f"Setting delay to {state.TARGET_DELAY:.2f} seconds")
     return False
+
+
+
+
