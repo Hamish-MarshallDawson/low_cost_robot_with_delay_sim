@@ -41,11 +41,11 @@ def measure_system_delay(start_time):
     #measures actual system delay by calculating the time taken to excecute a command
     elapsed_ms = (time.time() - start_time) * 1000
     
-    # Add to rolling average
+    # Adds the inputs from the leader to the delay samples
     state.DELAY_SAMPLES.append(elapsed_ms)
     if len(state.DELAY_SAMPLES) > state.MAX_DELAY_SAMPLES:
         state.DELAY_SAMPLES.pop(0)
     
-    # Calculate average
+    # Calculates the average
     state.SYSTEM_DELAY_MS = sum(state.DELAY_SAMPLES) / len(state.DELAY_SAMPLES)
     return elapsed_ms

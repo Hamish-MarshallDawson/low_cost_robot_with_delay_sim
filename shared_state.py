@@ -44,5 +44,8 @@ running = True
 SYSTEM_DELAY_MS = 0.0  # Actual measured system delay in milliseconds
 LAST_COMMAND_TIME = 0.0  # When we last sent a command to the follower
 COMMAND_COUNT = 0  # Track number of commands for rolling average
-MAX_DELAY_SAMPLES = 10  # Number of samples for rolling average
+
+#this number is used to calculate the average delay
+# I have tried 10, 100 and 30. For the purpose of this setup 30 seems to be the best in terms of responsiveness and stability.
+MAX_DELAY_SAMPLES = 30  # Number of samples for rolling average
 DELAY_SAMPLES = []  # Store recent delay measurements

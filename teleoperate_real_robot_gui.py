@@ -74,7 +74,7 @@ def update_gui():
         delay_progress["value"] = state.NETWORK_DELAY
         
         # Update system delay display
-        system_delay_var.set(f"Real System Delay: {state.SYSTEM_DELAY_MS:.1f} ms")
+        system_delay_var.set(f"Realtime i/o Delay: {state.SYSTEM_DELAY_MS:.1f} ms")
         
         # Update slider
         if not state.delay_slider_dragging:
