@@ -1,17 +1,16 @@
-"""Main file for the robot teleoperation GUI application."""
+# main launch file for the teleoperation GUI with delay simulation
 import tkinter as tk
 from tkinter import ttk
 import threading
 import time
 
-# Import custom modules
+# Imports all required files for the gui and robot control/delay simulation
 import shared_state as state
 import robot_controller as rc
 import delay_simulator as ds
 import gui_components as gc
 
 def robot_control_thread(leader, follower):
-    """Thread function for controlling robots with delay."""
     while state.running:
         try:
             # Read leader position and store in buffer
@@ -19,7 +18,7 @@ def robot_control_thread(leader, follower):
             
             current_time = time.time()
             
-            # Handle jitter
+            # Handles jitter functionality
             if state.JITTER_ENABLED:
                 if current_time - state.LAST_JITTER_TIME > 0.03:
                     if not state.TRANSITION_ACTIVE:
@@ -31,9 +30,10 @@ def robot_control_thread(leader, follower):
             # Handle transitions
             ds.process_transitions()
             
-            # Process slider value
+            # Process slider value as its our main form of input for delay
             if not state.TRANSITION_ACTIVE:
                 slider_value = delay_slider.get()
+                #gets the absolute value of the slider and looks to see if it is different from the current delay
                 if abs(slider_value - state.NETWORK_DELAY) > 0.01:
                     if slider_value > state.NETWORK_DELAY:
                         state.DELAY_ANCHOR_TIME = time.time()
@@ -41,23 +41,21 @@ def robot_control_thread(leader, follower):
                     state.TARGET_DELAY = slider_value
                     state.TRANSITION_ACTIVE = True
             
-            # Get delayed position
+            # Get delayed position from buffer
             target_time = ds.calculate_target_time()
             delayed_position = rc.get_delayed_position(leader_pos, target_time)
             
-            # Apply to follower robot
+            # Applies that delayed position to the follower robot
             follower.set_goal_pos(delayed_position)
-            
-            # Sleep to avoid high CPU usage
-            time.sleep(0.01)
         
+        #error handling for the robot thread
         except Exception as e:
             print(f"Error in robot thread: {e}")
             status_var.set(f"ERROR: {e}")
             time.sleep(1)
 
 def update_gui():
-    """Update GUI elements with current state."""
+    #dynamically updates the gui to display the current delay and other info
     if state.running:
         # Update delay display
         if state.JITTER_ENABLED:
@@ -76,7 +74,7 @@ def update_gui():
         root.after(50, update_gui)
 
 def on_closing():
-    """Handle window closing."""
+    #handles file closing and cleanup
     state.running = False
     root.destroy()
 
@@ -85,7 +83,7 @@ if __name__ == "__main__":
     # Initialize robots
     leader, follower = rc.initialize_robots()
     
-    # Create main window
+    # Create main window for the program
     root = tk.Tk()
     root.title("Robot Delay Control")
     root.geometry("500x400")
@@ -94,6 +92,8 @@ if __name__ == "__main__":
     control_frame = ttk.LabelFrame(root, text="Delay Controls")
     control_frame.pack(padx=10, pady=10, fill='x')
     
+    
+    # Create current delay display and slider
     current_delay_var = tk.StringVar(value=f"Current Delay: {state.NETWORK_DELAY:.2f} seconds")
     current_delay_label = ttk.Label(control_frame, textvariable=current_delay_var, font=("Arial", 14))
     current_delay_label.pack(pady=10)
@@ -167,7 +167,7 @@ if __name__ == "__main__":
         lambda event: gc.update_jitter_intensity(jitter_intensity_var, update_status)
     )
     
-    
+    # handles slider press and release events
     def on_slider_press_local(event):
         delay_slider_dragging = gc.on_slider_press()
     

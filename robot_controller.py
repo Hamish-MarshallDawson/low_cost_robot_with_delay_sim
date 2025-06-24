@@ -5,6 +5,9 @@ from dynamixel import Dynamixel
 import time
 import shared_state as state
 
+
+# a lot of this code is copied from the original low_cost_robot repo as all I have added on top of it is the delay simulation and gui interface
+
 def initialize_robots():
     """Initialize and configure the robots."""
     leader_dynamixel = Dynamixel.Config(baudrate=1_000_000, device_name='COM4').instantiate()

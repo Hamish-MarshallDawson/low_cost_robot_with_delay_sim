@@ -7,7 +7,7 @@ import shared_state as state
 
 # Event handler functions
 def randomize_delay():
-    """Randomize the delay value."""
+    #gives random delay between the min and max set in shared_state.py
     new_delay = random.uniform(state.MIN_DELAY, state.MAX_DELAY)
     if new_delay > state.NETWORK_DELAY:
         state.DELAY_ANCHOR_TIME = time.time()
@@ -19,7 +19,7 @@ def randomize_delay():
     return f"Randomized delay to {state.TARGET_DELAY:.2f} seconds"
 
 def toggle_jitter(jitter_btn, status_callback):
-    """Toggle jitter on/off."""
+    #toggles the jitter effect on and off
     if state.JITTER_ENABLED:
         state.JITTER_ENABLED = False
         jitter_btn.config(text="Enable Jitter")
@@ -36,7 +36,7 @@ def toggle_jitter(jitter_btn, status_callback):
         status_callback(f"Jitter Enabled: {state.JITTER_MIN:.2f}s - {state.JITTER_MAX:.2f}s")
 
 def update_jitter_intensity(selection, status_callback):
-    """Update jitter intensity based on selection."""
+    #depending on what jitter intensity is selected it will change the range of the jitter effect
     selected = selection.get()
     state.JITTER_INTENSITY = state.JITTER_INTENSITY_OPTIONS[selected]
     state.JITTER_RANGE = state.JITTER_INTENSITY
@@ -49,11 +49,11 @@ def update_jitter_intensity(selection, status_callback):
         status_callback(f"Jitter intensity set to {selected}")
 
 def on_slider_press():
-    """Handle slider press event."""
+    #handles the slider stuff
     return True
 
 def on_slider_release(slider, status_callback):
-    """Handle slider release event."""
+    #handles what happens when the slider is released 
     new_delay = slider.get()
     if new_delay > state.NETWORK_DELAY:
         state.DELAY_ANCHOR_TIME = time.time()

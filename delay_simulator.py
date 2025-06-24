@@ -5,7 +5,7 @@ import random
 import shared_state as state
 
 def smooth_jitter(current_delay, jitter_min, jitter_max):
-    """Generate smoother jitter transitions."""
+    #as the jitter originally was a very rough and could lead to faulty behaviour.
     jitter_step = 0.005
     range_center = (jitter_min + jitter_max) / 2
     
@@ -22,13 +22,13 @@ def smooth_jitter(current_delay, jitter_min, jitter_max):
     return new_delay
 
 def update_jitter_range():
-    """Update jitter range around current delay."""
+    #allows for the actual jitter bit
     if state.JITTER_ENABLED:
         state.JITTER_MIN = max(state.MIN_DELAY, state.NETWORK_DELAY - state.JITTER_RANGE/2)
         state.JITTER_MAX = min(state.MAX_DELAY, state.NETWORK_DELAY + state.JITTER_RANGE/2)
 
 def calculate_target_time():
-    """Calculate target time for delay simulation with time-travel prevention."""
+    #this functions calculates the time that the follower robot has to update to
     current_time = time.time()
     time_since_anchor = current_time - state.DELAY_ANCHOR_TIME
     
@@ -41,7 +41,7 @@ def calculate_target_time():
         return current_time - state.NETWORK_DELAY
 
 def process_transitions():
-    """Handle delay transitions smoothly."""
+    #this smoothly updates the follower robots delay to the new goal delay
     if state.TRANSITION_ACTIVE:
         if abs(state.NETWORK_DELAY - state.TARGET_DELAY) < state.TRANSITION_SPEED:
             state.NETWORK_DELAY = state.TARGET_DELAY
