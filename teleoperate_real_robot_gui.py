@@ -25,9 +25,9 @@ position_buffer = collections.deque(maxlen=1000) # buffer that creates a queue o
 # Configurable delay (in seconds)
 NETWORK_DELAY = 0.0  # Start with no delay
 MIN_DELAY = 0.0 # what is the least amount of delay that can be set
-MAX_DELAY = 2.0 #maximum amount of delay that can be set
+MAX_DELAY = 10.0 #maximum amount of delay that can be set
 TARGET_DELAY = 0.0 #target delay for smooth transtion
-TRANSITION_SPEED = 0.1 #how quickly the delay should transtion to the target delay
+TRANSITION_SPEED = 0.2 #how quickly the delay should transtion to the target delay
 TRANSITION_ACTIVE = False
 DELAY_STEP = 0.1 
 # Variables to prevent rewinding/time-travel when delay increases
@@ -36,10 +36,18 @@ DELAY_ANCHOR_VALUE = 0.0         # Value of delay at anchor time
 
 #To enable jitter delay
 JITTER_ENABLED = False
-JITTER_RANGE = 0.50
-Jitter_MIN = 0.0
+JITTER_RANGE = 0.20
+JITTER_MIN = 0.0
 JITTER_MAX = 0.0
 LAST_JITTER_TIME = 0 #control how often jitter changes
+
+# Add these variables near the top
+JITTER_INTENSITY = 0.2  # Default medium jitter
+JITTER_INTENSITY_OPTIONS = {
+    "Low": 0.05,
+    "Medium": 0.2,
+    "High": 0.5
+}
 
 #makes the main window for the gui
 root = tk.Tk()
@@ -112,25 +120,27 @@ def randomize_delay():
     
     
 def toggle_jitter():
-     global JITTER_ENABLED, JITTER_MIN, JITTER_MAX, NETWORK_DELAY, DELAY_ANCHOR_TIME, DELAY_ANCHOR_VALUE
-     
-     if JITTER_ENABLED:
-            JITTER_ENABLED = False
-            jitter_btn.config(text="Enable Jitter")
-            status_var.set("Jitter Disabled")
-     else:
-         #enables jitter
+    global JITTER_ENABLED, JITTER_MIN, JITTER_MAX, NETWORK_DELAY, DELAY_ANCHOR_TIME, DELAY_ANCHOR_VALUE, JITTER_RANGE, JITTER_INTENSITY
+    
+    if JITTER_ENABLED:
+        JITTER_ENABLED = False
+        jitter_btn.config(text="Enable Jitter")
+        status_var.set("Jitter Disabled")
+    else:
         JITTER_ENABLED = True
-         
+        
+        # Use current intensity setting
+        JITTER_RANGE = JITTER_INTENSITY
         JITTER_MIN = max(MIN_DELAY, NETWORK_DELAY - JITTER_RANGE/2)
         JITTER_MAX = min(MAX_DELAY, NETWORK_DELAY + JITTER_RANGE/2)
+        
         DELAY_ANCHOR_TIME = time.time()
         DELAY_ANCHOR_VALUE = NETWORK_DELAY
         jitter_btn.config(text="Disable Jitter")
-        status_var.set(f"Jitter Enabled: {JITTER_MIN:.2f} - {JITTER_MAX:.2f} seconds")
+        status_var.set(f"Jitter Enabled: {JITTER_MIN:.2f}s - {JITTER_MAX:.2f}s")
     
-     jitter_btn.state(['pressed'])
-     root.after(100, lambda: jitter_btn.state(['!pressed']))
+        jitter_btn.state(['pressed'])
+        root.after(100, lambda: jitter_btn.state(['!pressed']))
         
 jitter_btn = ttk.Button(button_frame, text="Enable Jitter", command=toggle_jitter)
 jitter_btn.pack(side="left", padx=5, expand=True, fill="x")
@@ -166,9 +176,65 @@ delay_progress = ttk.Progressbar(
 
 delay_progress.pack(pady=10, padx=10, fill="x")
 
+# Add this to your GUI section
+jitter_intensity_frame = ttk.Frame(control_frame)
+jitter_intensity_frame.pack(pady=5, fill="x")
 
+ttk.Label(jitter_intensity_frame, text="Jitter Intensity:").pack(side="left", padx=5)
+
+# Add this function to update jitter intensity
+def update_jitter_intensity(event=None):
+    global JITTER_RANGE, JITTER_MIN, JITTER_MAX, JITTER_INTENSITY, NETWORK_DELAY
+    
+    selected = jitter_intensity_var.get()
+    JITTER_INTENSITY = JITTER_INTENSITY_OPTIONS[selected]
+    JITTER_RANGE = JITTER_INTENSITY
+    
+    # Update jitter bounds around current delay
+    if JITTER_ENABLED:
+        JITTER_MIN = max(MIN_DELAY, NETWORK_DELAY - JITTER_RANGE/2)
+        JITTER_MAX = min(MAX_DELAY, NETWORK_DELAY + JITTER_RANGE/2)
+        status_var.set(f"Jitter intensity set to {selected}: {JITTER_MIN:.2f}s-{JITTER_MAX:.2f}s")
+    else:
+        status_var.set(f"Jitter intensity set to {selected}")
+
+jitter_intensity_var = tk.StringVar(value="Medium")
+jitter_intensity_menu = ttk.Combobox(
+    jitter_intensity_frame, 
+    textvariable=jitter_intensity_var,
+    values=list(JITTER_INTENSITY_OPTIONS.keys()),
+    width=10,
+    state="readonly"
+)
+jitter_intensity_menu.pack(side="left", padx=5)
+jitter_intensity_menu.bind("<<ComboboxSelected>>", update_jitter_intensity)
 
 #func to run to control robot in separate thread
+
+# Add this function BEFORE robot_control_thread
+def smooth_jitter(current_delay, jitter_min, jitter_max):
+    """Generate smoother jitter transitions"""
+    # Use a smaller step for jitter transitions
+    jitter_step = 0.005  # Very small steps
+    
+    # Decide direction based on current position in range
+    range_center = (jitter_min + jitter_max) / 2
+    range_width = jitter_max - jitter_min
+    
+    if current_delay >= range_center:
+        # More likely to move down when above center
+        move_up_probability = 0.3
+    else:
+        # More likely to move up when below center
+        move_up_probability = 0.7
+    
+    # Add a tiny drift in the chosen direction
+    if random.random() < move_up_probability:
+        new_delay = min(jitter_max, current_delay + jitter_step)
+    else:
+        new_delay = max(jitter_min, current_delay - jitter_step)
+    
+    return new_delay
 
 def robot_control_thread():
     global NETWORK_DELAY, TRANSITION_ACTIVE, DELAY_ANCHOR_TIME, DELAY_ANCHOR_VALUE, TARGET_DELAY, LAST_JITTER_TIME, JITTER_MIN, JITTER_MAX
@@ -179,14 +245,18 @@ def robot_control_thread():
             leader_pos = leader.read_position()
             position_buffer.append((time.time(), leader_pos))
             
-            # Handle jitter when enabled
             current_time = time.time()
-            if JITTER_ENABLED and current_time - LAST_JITTER_TIME > 0.1:  # Update jitter every 100ms
-                # Only apply jitter when not in middle of another transition
-                if not TRANSITION_ACTIVE:
-                    TARGET_DELAY = random.uniform(JITTER_MIN, JITTER_MAX)
-                    TRANSITION_ACTIVE = True
-                LAST_JITTER_TIME = current_time
+            
+            # Handle jitter differently - use smooth jitter
+            if JITTER_ENABLED:
+                # Update jitter more frequently with smaller changes
+                if current_time - LAST_JITTER_TIME > 0.03:  # 30ms updates for smoother jitter
+                    # Use smooth jitter algorithm instead of abrupt changes
+                    if not TRANSITION_ACTIVE:
+                        # Only apply jitter if not transitioning to a user-selected value
+                        TARGET_DELAY = smooth_jitter(NETWORK_DELAY, JITTER_MIN, JITTER_MAX)
+                        TRANSITION_ACTIVE = True
+                    LAST_JITTER_TIME = current_time
             
             # Handle the delay transition
             if TRANSITION_ACTIVE:
