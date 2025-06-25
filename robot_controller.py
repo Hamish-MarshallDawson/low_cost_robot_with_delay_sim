@@ -11,11 +11,14 @@ import shared_state as state
 
 def initialize_robots():
     #starts and configures the leader and follower robots
-    leader_dynamixel = Dynamixel.Config(baudrate=1_000_000, device_name='COM4').instantiate()
-    follower_dynamixel = Dynamixel.Config(baudrate=1_000_000, device_name='COM3').instantiate()
+    #leader_dynamixel = Dynamixel.Config(baudrate=1_000_000, device_name='COM4').instantiate()
+    #follower_dynamixel = Dynamixel.Config(baudrate=1_000_000, device_name='COM3').instantiate()
+    leader_dynamixel = Dynamixel.Config(baudrate=1_000_000, device_name='/dev/ttyACM1').instantiate()
+    follower_dynamixel = Dynamixel.Config(baudrate=1_000_000, device_name='/dev/ttyACM0').instantiate()
     
-    follower = Robot(follower_dynamixel, servo_ids=[2, 3, 4, 5, 6])
-    leader = Robot(leader_dynamixel, servo_ids=[8, 9, 10, 11, 12])
+    
+    follower = Robot(follower_dynamixel, servo_ids=[1, 2, 3, 4, 5, 6])
+    leader = Robot(leader_dynamixel, servo_ids=[7, 8, 9, 10, 11, 12])
     leader.set_trigger_torque()
     
     return leader, follower
