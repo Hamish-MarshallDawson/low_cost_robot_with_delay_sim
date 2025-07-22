@@ -1,3 +1,17 @@
+# Low-Cost Robot arm with added delay 
+
+Developed gui that allows users to change "network" delay in real time. Features include the following:
+* Real time system delay display
+* Combined total delay of simulated delay and real time delay
+* Slider to adjust delay
+* Jitter delay amounts
+* Randomise delay amount
+
+
+
+
+
+
 # Low-Cost Robot Arm
 Join the waitlist here to get all the parts in one package: https://tau-robotics.com/robots
 
