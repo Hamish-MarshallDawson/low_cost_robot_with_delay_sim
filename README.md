@@ -9,6 +9,18 @@ Developed gui that allows users to change "network" delay in real time. Features
 
 
 
+## BELOW IS ORIGINAL READ ME INFO (I DID NONE OF THIS ALL CREDIT TO ORIGINAL DEV)
+
+
+
+
+
+
+
+
+
+
+
 
 
 
